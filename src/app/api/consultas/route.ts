@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sanitizarRespostas } from "@/lib/consultaLoa2027Questoes";
+import { consultaEncerrada, sanitizarRespostas } from "@/lib/consultaLoa2027Questoes";
 import { registrarRespostaNaPlanilha } from "@/lib/googleSheets";
 
 export async function POST(request: NextRequest) {
+  if (consultaEncerrada()) {
+    return NextResponse.json(
+      { error: "O prazo para participar desta consulta pública encerrou em 25/09/2026." },
+      { status: 403 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();

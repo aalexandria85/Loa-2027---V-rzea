@@ -1,6 +1,11 @@
 import { ConsultaLoa2027Form } from "@/components/ConsultaLoa2027Form";
+import { consultaEncerrada } from "@/lib/consultaLoa2027Questoes";
+
+export const dynamic = "force-dynamic";
 
 export default function ConsultaLoa2027Page() {
+  const encerrada = consultaEncerrada();
+
   return (
     <div className="flex min-h-full flex-col bg-slate-50">
       <header className="bg-slate-900 text-white">
@@ -12,6 +17,7 @@ export default function ConsultaLoa2027Page() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Participação Cidadã</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">Consulta Pública Eletrônica — LOA 2027</h1>
+        <p className="mt-1 text-sm font-semibold text-slate-500">Prazo para participar: até 25/09/2026</p>
 
         <p className="mt-4 text-slate-600">
           Este questionário tem como finalidade ouvir a população para identificar prioridades, problemas,
@@ -34,7 +40,18 @@ export default function ConsultaLoa2027Page() {
         </div>
 
         <div className="mt-8">
-          <ConsultaLoa2027Form />
+          {encerrada ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+              <p className="text-2xl">🗓️</p>
+              <h2 className="mt-2 text-lg font-bold text-slate-900">Prazo de participação encerrado</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                O prazo para responder a esta consulta pública encerrou em 25/09/2026. Agradecemos a
+                participação de todos os cidadãos que contribuíram para a elaboração da LOA 2027.
+              </p>
+            </div>
+          ) : (
+            <ConsultaLoa2027Form />
+          )}
         </div>
       </main>
 
