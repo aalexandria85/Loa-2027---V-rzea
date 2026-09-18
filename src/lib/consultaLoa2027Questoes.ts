@@ -1,8 +1,8 @@
 // Perguntas da Consulta Pública Eletrônica – LOA 2027 (Prefeitura Municipal de Várzea/RN).
 // Compartilhado entre o formulário público (client) e a rota de API que grava no Google Sheets (server).
 
-// Fim do prazo de participação: 25/09/2026, 23:59:59 (horário de Brasília).
-export const DATA_LIMITE_CONSULTA = "2026-09-25T23:59:59-03:00";
+// Fim do prazo de participação: 30/09/2026, 23:59:59 (horário de Brasília).
+export const DATA_LIMITE_CONSULTA = "2026-09-30T23:59:59-03:00";
 
 export function consultaEncerrada(agora: Date = new Date()): boolean {
   return agora.getTime() > new Date(DATA_LIMITE_CONSULTA).getTime();

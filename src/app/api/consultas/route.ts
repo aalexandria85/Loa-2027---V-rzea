@@ -5,7 +5,7 @@ import { registrarRespostaNaPlanilha } from "@/lib/googleSheets";
 export async function POST(request: NextRequest) {
   if (consultaEncerrada()) {
     return NextResponse.json(
-      { error: "O prazo para participar desta consulta pública encerrou em 25/09/2026." },
+      { error: "O prazo para participar desta consulta pública encerrou em 30/09/2026." },
       { status: 403 }
     );
   }
