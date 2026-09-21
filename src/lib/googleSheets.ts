@@ -12,7 +12,8 @@ function getConfig() {
       "Integração com o Google Sheets não configurada (GOOGLE_SHEETS_CLIENT_EMAIL / GOOGLE_SHEETS_PRIVATE_KEY / GOOGLE_SHEETS_SPREADSHEET_ID)"
     );
   }
-  return { email, chave: chave.replace(/\\n/g, "\n"), spreadsheetId };
+  const chaveLimpa = chave.trim().replace(/^"([\s\S]*)"$/, "$1").replace(/\\n/g, "\n");
+  return { email, chave: chaveLimpa, spreadsheetId };
 }
 
 function getSheetsClient(email: string, chave: string) {
