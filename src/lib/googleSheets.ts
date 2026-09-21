@@ -1,39 +1,38 @@
-import { createPrivateKey } from "node:crypto";
 import { google } from "googleapis";
 import { CABECALHO_PLANILHA, linhaPlanilha, Respostas } from "./consultaLoa2027Questoes";
 
 const NOME_ABA = process.env.GOOGLE_SHEETS_TAB_NAME || "Respostas";
 
+interface ContaServico {
+  client_email: string;
+  private_key: string;
+}
+
 function getConfig() {
-  const email = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
-  const chave = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
+  const jsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-  if (!email || !chave || !spreadsheetId) {
+  if (!jsonBase64 || !spreadsheetId) {
     throw new Error(
-      "Integração com o Google Sheets não configurada (GOOGLE_SHEETS_CLIENT_EMAIL / GOOGLE_SHEETS_PRIVATE_KEY / GOOGLE_SHEETS_SPREADSHEET_ID)"
+      "Integração com o Google Sheets não configurada (GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 / GOOGLE_SHEETS_SPREADSHEET_ID)"
     );
   }
-  const chaveBruta = chave
-    .trim()
-    .replace(/^"([\s\S]*)"$/, "$1")
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .trim();
 
-  // O OpenSSL 3 usado no runtime do Vercel é, por vezes, mais estrito que o local ao
-  // interpretar a string PEM diretamente. Reanalisar e reexportar a chave via crypto do
-  // Node normaliza a codificação antes de repassá-la ao google-auth-library.
-  let chaveLimpa: string;
+  // Guardar o JSON inteiro da conta de serviço em Base64 evita qualquer corrupção de
+  // aspas, quebras de linha ou caracteres invisíveis que costuma ocorrer ao colar uma
+  // chave PEM multi-linha diretamente em variáveis de ambiente de painéis como o Vercel.
+  let conta: ContaServico;
   try {
-    chaveLimpa = createPrivateKey(chaveBruta).export({ type: "pkcs8", format: "pem" }).toString();
+    const jsonTexto = Buffer.from(jsonBase64.trim(), "base64").toString("utf8");
+    conta = JSON.parse(jsonTexto);
   } catch (err) {
-    console.error("[consultaLoa2027][diag] falha ao normalizar a chave privada com node:crypto:", err);
-    throw new Error("Chave privada do Google Sheets em formato inválido (falha ao normalizar via crypto)");
+    console.error("[consultaLoa2027][diag] falha ao decodificar GOOGLE_SERVICE_ACCOUNT_JSON_BASE64:", err);
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 inválida (não decodifica para um JSON de conta de serviço)");
+  }
+  if (!conta.client_email || !conta.private_key) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 não contém client_email/private_key");
   }
 
-  return { email, chave: chaveLimpa, spreadsheetId };
+  return { email: conta.client_email, chave: conta.private_key, spreadsheetId };
 }
 
 function getSheetsClient(email: string, chave: string) {
