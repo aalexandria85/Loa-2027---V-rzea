@@ -12,7 +12,27 @@ function getConfig() {
       "Integração com o Google Sheets não configurada (GOOGLE_SHEETS_CLIENT_EMAIL / GOOGLE_SHEETS_PRIVATE_KEY / GOOGLE_SHEETS_SPREADSHEET_ID)"
     );
   }
-  const chaveLimpa = chave.trim().replace(/^"([\s\S]*)"$/, "$1").replace(/\\n/g, "\n");
+  const chaveLimpa = chave
+    .trim()
+    .replace(/^"([\s\S]*)"$/, "$1")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
+
+  console.log("[consultaLoa2027][diag] formato da chave privada:", {
+    tamanho: chaveLimpa.length,
+    linhas: chaveLimpa.split("\n").length,
+    comecaComCabecalho:
+      chaveLimpa.startsWith("-----BEGIN PRIVATE KEY-----") ||
+      chaveLimpa.startsWith("-----BEGIN RSA PRIVATE KEY-----"),
+    terminaComRodape:
+      chaveLimpa.endsWith("-----END PRIVATE KEY-----") || chaveLimpa.endsWith("-----END RSA PRIVATE KEY-----"),
+    primeiroChar: JSON.stringify(chaveLimpa[0]),
+    ultimoChar: JSON.stringify(chaveLimpa[chaveLimpa.length - 1]),
+  });
+
   return { email, chave: chaveLimpa, spreadsheetId };
 }
 
