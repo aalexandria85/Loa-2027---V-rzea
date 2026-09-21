@@ -1,3 +1,4 @@
+import { createPrivateKey } from "node:crypto";
 import { google } from "googleapis";
 import { CABECALHO_PLANILHA, linhaPlanilha, Respostas } from "./consultaLoa2027Questoes";
 
@@ -12,7 +13,7 @@ function getConfig() {
       "Integração com o Google Sheets não configurada (GOOGLE_SHEETS_CLIENT_EMAIL / GOOGLE_SHEETS_PRIVATE_KEY / GOOGLE_SHEETS_SPREADSHEET_ID)"
     );
   }
-  const chaveLimpa = chave
+  const chaveBruta = chave
     .trim()
     .replace(/^"([\s\S]*)"$/, "$1")
     .replace(/\\r\\n/g, "\n")
@@ -21,17 +22,16 @@ function getConfig() {
     .replace(/\r/g, "\n")
     .trim();
 
-  console.log("[consultaLoa2027][diag] formato da chave privada:", {
-    tamanho: chaveLimpa.length,
-    linhas: chaveLimpa.split("\n").length,
-    comecaComCabecalho:
-      chaveLimpa.startsWith("-----BEGIN PRIVATE KEY-----") ||
-      chaveLimpa.startsWith("-----BEGIN RSA PRIVATE KEY-----"),
-    terminaComRodape:
-      chaveLimpa.endsWith("-----END PRIVATE KEY-----") || chaveLimpa.endsWith("-----END RSA PRIVATE KEY-----"),
-    primeiroChar: JSON.stringify(chaveLimpa[0]),
-    ultimoChar: JSON.stringify(chaveLimpa[chaveLimpa.length - 1]),
-  });
+  // O OpenSSL 3 usado no runtime do Vercel é, por vezes, mais estrito que o local ao
+  // interpretar a string PEM diretamente. Reanalisar e reexportar a chave via crypto do
+  // Node normaliza a codificação antes de repassá-la ao google-auth-library.
+  let chaveLimpa: string;
+  try {
+    chaveLimpa = createPrivateKey(chaveBruta).export({ type: "pkcs8", format: "pem" }).toString();
+  } catch (err) {
+    console.error("[consultaLoa2027][diag] falha ao normalizar a chave privada com node:crypto:", err);
+    throw new Error("Chave privada do Google Sheets em formato inválido (falha ao normalizar via crypto)");
+  }
 
   return { email, chave: chaveLimpa, spreadsheetId };
 }
